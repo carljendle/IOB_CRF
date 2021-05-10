@@ -1,3 +1,5 @@
+''' Copied from https://github.com/kmkurn/pytorch-crf/blob/master/torchcrf/__init__.py, modified initial values for transitions.'''
+
 from typing import List, Optional
 
 # import torch
