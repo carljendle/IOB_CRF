@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 class CRF_copy(nn.Module):
@@ -29,7 +30,7 @@ class CRF_copy(nn.Module):
     .. _Viterbi algorithm: https://en.wikipedia.org/wiki/Viterbi_algorithm
     """
 
-    def __init__(self, num_tags, batch_first= False, class_weights=None, stoi = None):
+    def __init__(self, num_tags, batch_first= False, stoi = None):
         if num_tags <= 0:
             raise ValueError(f'invalid number of tags: {num_tags}')
         super().__init__()
@@ -39,10 +40,7 @@ class CRF_copy(nn.Module):
         self.end_transitions = nn.Parameter(torch.empty(num_tags))
         self.transitions = nn.Parameter(torch.empty(num_tags, num_tags))
         self.stoi = stoi
-        if class_weights is None:
-          class_weights= np.array([0,0,0,1,1,1])
 
-        self.class_weights = torch.FloatTensor(class_weights).cuda() #converting from numpy array to tensor
 
         self.reset_parameters()
         
@@ -227,15 +225,15 @@ class CRF_copy(nn.Module):
 
         for i in range(1, seq_length):
 
-            score += self.transitions[tags[i - 1], tags[i]] * mask[i] #* self.class_weights[tags[i]]
+            score += self.transitions[tags[i - 1], tags[i]] * mask[i] 
 
-            score += emissions[i, torch.arange(batch_size), tags[i]] * mask[i] #* self.class_weights[tags[i]]
+            score += emissions[i, torch.arange(batch_size), tags[i]] * mask[i] 
 
         seq_ends = mask.long().sum(dim=0) - 1
 
         last_tags = tags[seq_ends, torch.arange(batch_size)]
 
-        score += self.end_transitions[last_tags] #* self.class_weights[last_tags]
+        score += self.end_transitions[last_tags] 
         
 
         return score
@@ -250,7 +248,7 @@ class CRF_copy(nn.Module):
         seq_length = emissions.size(0)
         batch_size = emissions.size(1)
 
-        score = (self.start_transitions + emissions[0])#*self.class_weights.repeat(batch_size,1)
+        score = (self.start_transitions + emissions[0])
 
         for i in range(1, seq_length):
 
@@ -258,13 +256,13 @@ class CRF_copy(nn.Module):
 
             broadcast_emissions = emissions[i].unsqueeze(1)
 
-            next_score = (broadcast_score + self.transitions + broadcast_emissions)#*self.class_weights.repeat(batch_size,6,1)
+            next_score = (broadcast_score + self.transitions + broadcast_emissions)
 
             next_score = torch.logsumexp(next_score, dim=1)
 
             score = torch.where(mask[i].unsqueeze(1), next_score, score)
 
-        score += self.end_transitions#*self.class_weights.repeat(batch_size,1)
+        score += self.end_transitions
 
         return torch.logsumexp(score, dim=1)
 
