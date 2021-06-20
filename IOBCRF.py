@@ -1,4 +1,4 @@
-''' Copied from https://github.com/kmkurn/pytorch-crf/blob/master/torchcrf/__init__.py, modified initial values for transitions.'''
+
 
 from typing import List, Optional
 
@@ -74,7 +74,7 @@ class CRF_copy(nn.Module):
               pass
             else:
               self._parameters['transitions'].data[start][stop] = -100
-              print("Stopping transition " + ent + " to " + en)
+              #print("Stopping transition " + ent + " to " + en)
         for ent in beginning:
           start = self.stoi[ent]
           for en in inside:
@@ -83,12 +83,12 @@ class CRF_copy(nn.Module):
               pass
             else:
               self._parameters['transitions'].data[start][stop] = -100
-              print("Stopping transition " + ent + " to " + en)
+              #print("Stopping transition " + ent + " to " + en)
 
         for ent in inside:
           stop = self.stoi[ent]
           self._parameters['transitions'].data[O][stop] = -100
-          print("Stopping transition O to " + ent)
+          #print("Stopping transition O to " + ent)
 
 
 
